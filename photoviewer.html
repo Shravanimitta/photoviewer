@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Photoviewer</title>
+	 <link rel="stylesheet" href="css/photoviewer-stylesheet.css">
+	<!--<link rel="stylesheet" href="css/grid.css">
+	 -->
+	 	<style>
+  body { 
+  	font-family: sans-serif; 
+  	margin: 0 auto;
+  }
+
+  #container {
+    background: #DDD;
+    max-width: 1000px;
+  }
+
+  .item {
+    width: 300px;
+    float: left;
+  }
+
+  .item img {
+    display: block;
+    width: 100%;
+  }
+
+  button { font-size: 18px; } 
+
+@media (min-width:320px) and (max-width: 619px) {
+  	body {
+  		width: 300px;
+  	}
+  	#searchbox{
+  		margin-top: 50px;
+  	}
+  	#images{
+  		margin-top: 50px;
+  	}
+  	#header h2{
+  		margin: 0 auto !important;
+  	}
+  }	 	
+
+ @media (min-width:620px) and (max-width: 919px)  {
+  	body {
+  		width: 600px;
+  	}
+  	
+  }	  
+ @media (min-width:920px) and (max-width: 1219px) {
+  	body {
+  		width: 900px;
+  	}
+  }
+  @media (min-width:1220px)  {
+  	body {
+  		width: 1200px;
+  	}
+  }
+  
+
+	</style>
+	 <link href='http://fonts.googleapis.com/css?family=Dancing+Script' rel='stylesheet' type='text/css'>
+	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+</head>
+<body>
+	
+	<div id="header">
+		<h2>Photoviewer</h2>
+	</div>
+	<div class="line"></div>
+	<div id="searchbox" class= "position-center search-left">
+			<label for="search"></label>
+			<input type="text" id="search" placeholder="Search photos of...">
+			<input type="button" id = "submit">
+	</div>
+		<div id="images"></div>
+	
+</body>
+<script src="http://masonry.desandro.com/masonry.pkgd.min.js"></script>
+<script src="js/imagesLoaded.min.js"></script>
+<script>
+		var pg;
+		var $content;
+		var $scroll_bottom = false;
+		$(document).ready(function(){
+			var url_input = location.hash;
+			url_input = url_input.substring(1);
+			if(url_input != ""){
+				$("#search").val(url_input);
+				$("#submit").click();	
+			}
+			
+		});
+		//check if scrolled to the bottom
+		$(window).scroll(function() {
+			   if($(window).scrollTop() + $(window).height() == $(document).height()) {
+			      // alert("bottom!");
+				  $scroll_bottom = true; 
+				 $("#submit").click();	
+			   }
+			});
+		
+		$("#search").keyup(function(event){
+		    if(event.keyCode == 13){
+		        $("#submit").click();
+		    }
+		});
+		
+		$.fn.masonryImagesReveal = function( $items ) {
+			  var msnry = this.data('masonry');
+			  var itemSelector = msnry.options.itemSelector;
+			  // hide by default
+			  $items.hide();
+			  // append to container
+			  this.append( $items );
+			  $items.imagesLoaded().progress( function( imgLoad, image ) {
+			    // get item
+			    // image is imagesLoaded class, not <img>, <img> is image.img
+			    var $item = $( image.img ).parents( itemSelector );
+			    // un-hide item
+			    $item.show();
+			    // masonry does its thing
+			    msnry.appended( $item );
+			  });
+			  
+			  return this;
+			};
+		
+		//
+		 
+		
+	 	$("#submit").click(function(){
+	 		
+	 		var input = $("#search").val();
+	 		if(input != null && input != "" && $.trim(input).length != 0)
+	 		{
+	 		
+	 			location.hash = input;
+	 		
+	 		//Clear images div if not a scroll bottom
+	 		if($scroll_bottom != true){
+	 			$("#images").empty();
+	 		}
+	 		$scroll_bottom = false;
+	 		
+	 		var imgs='';	
+	 		$content = $("#images").masonry({
+				itemSelector: '.item',
+			    columnWidth: 300
+			}); 
+	 		
+	 		$("h2").animate({margin: "0px", 'text-align': "left"}, 3000);
+	 		$("#searchbox").animate({top: "64px"}, 1500, function(){
+	 			
+	 			//var el = $('#searchbox'),
+	 		   // curLeft = el.offset().left,
+	 		    //autoLeft = el.removeClass('search-left').css('left', '').css('right','0').offset().right;
+	 		//el.animate({right: autoLeft}, 1000);	
+	 		
+	 			$("#searchbox").animate({ left:'-300px', 'margin-left': '100%'}, 1500);
+	 		});	
+		
+			/* $( "#searchbox" ).removeClass( "position-center" ).addClass("animated fadeInUp");
+			 
+		    $("#images").css("display","block").addClass("animated fadeIn");
+		 */
+			var element = $("#search").val();
+			var flickerAPI = "https://api.flickr.com/services/rest/?method=flickr.photos.search";
+			
+			if(pg == null){
+				pg = 1;
+			}
+			$.ajax({
+				  dataType: "json",
+				  url: flickerAPI,
+				  method: "GET",
+				  data: {
+						format: "json",
+						api_key: "677c560c34e7bacfcd473fbedc5293ad",
+						tags: element,
+						tagmode: "any",
+						nojsoncallback : 1,
+						page : pg,
+						sort: "interestingness-desc",
+						per_page: 10
+					},
+				  success: function( data ) {
+					  pg = data.photos.page +1 ;
+					  
+					  $.each(data.photos.photo, function(i, item) {
+						  var url = "https://farm" + item.farm + ".staticflickr.com/" + item.server + "/" + item.id + "_" + item.secret + ".jpg" ;
+						  var item = '<div class="item">'+
+						    '<img src=' + url +'/></div>';
+						  imgs += item;
+					  });
+					  
+					  $content.masonryImagesReveal($(imgs));
+					  
+						  //$('#images').append($img).masonry( 'appended', $img, true);
+						  //start masonry
+				  }
+					 /*  $.each(data.items, function(i, item){
+							var url = "https://farm" + item.farm + ".staticflickr.com/" + item.server + "/" + item.id + "_" + item.secret + ".jpg" ;
+							$("<img>").attr("src",url).appendTo("#images").addClass("col-1-3").addClass("box"); */
+				});
+			}
+			else{
+				alert("Search entry blank!");
+			}
+					 
+		}); 
+
+	</script>
+	
+</html>
