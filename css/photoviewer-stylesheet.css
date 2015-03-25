@@ -6,6 +6,29 @@ body *{
 	box-sizing: border-box;
 }
 
+.image-zoom{
+	overflow: hidden;
+}
+.blur{
+	display: none;
+	width: 100%;
+	margin : 0 auto;
+	text-align: center;
+	position: fixed;	
+	background: rgba(20,20,20,0.8);
+	top: 0;
+	bottom: 0;
+	z-index: 2;
+}
+.main-container{
+	position: relative;
+	box-sizing: border-box;
+}
+
+#image-preview{
+	position: relative;
+}
+
 #header h2{
 	color: white;
 	text-align: center;
